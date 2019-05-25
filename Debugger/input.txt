@@ -1,10 +1,12 @@
 sub main
   set a 2
+  call foo2
   call foo
 
 sub foo
   print a
-  call foo2
+  print b
+  call foo
 
 sub foo2
-  call foo
+  set b 5

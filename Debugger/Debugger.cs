@@ -50,7 +50,7 @@ namespace dbg
                     switch (cur.Items[0])
                     {
                         case "print":
-                            Console.WriteLine(dbg.Variables.Find(v => v.Name == cur.Items[1]).Value);
+                            Console.Write("\n" + dbg.Variables.Find(v => v.Name == cur.Items[1]).Value);
                             dbg.Trace.Push(cur);
                             break;
 
@@ -67,7 +67,7 @@ namespace dbg
                             break;
 
                         case "call":
-                            if (dbg.Trace.Any(f => f.Function.Name == cur.Function.Name))
+                            if (dbg.Trace.Any(f => f.Function.Name == cur.Items[1]))
                             {
                                 throw new StackOverflowException();
                             }
@@ -99,17 +99,17 @@ namespace dbg
                 }
                 catch (StackOverflowException)
                 {
-                    Console.WriteLine("Oops! Seems, its stack overflow...");
+                    Console.WriteLine("\nOops! Seems, its stack overflow...");
                     throw new Exception();
                 }
                 catch (InvalidOperationException msg)
                 {
-                    Console.WriteLine("Invalid operator: " + msg);
+                    Console.WriteLine("\n" + msg);
                     throw new Exception();
                 }
                 catch (Exception msg)
                 {
-                    Console.WriteLine(msg);
+                    Console.WriteLine("\n" + msg);
                     throw new Exception();
                 }
             }
@@ -236,19 +236,17 @@ namespace dbg
 
         public void DisplayStackTrace()
         {
-            Console.WriteLine();
             foreach (var step in Trace)
             {
-                Console.WriteLine(step);
+                Console.Write("\n" + step);
             }
         }
 
         public void DisplayVariables()
         {
-            Console.WriteLine();
             foreach (var variable in Variables)
             {
-                Console.WriteLine(variable);
+                Console.Write("\n" + variable);
             }
         }
     }
