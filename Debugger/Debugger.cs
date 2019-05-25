@@ -44,51 +44,73 @@ namespace dbg
 
             public void Execute(int id, bool isStepOver, Debugger dbg)
             {
-                var cur = Strings.Find(s => s.Id == id);
-                switch (cur.Items[0])
+                try
                 {
-                    case "print":
-                        Console.WriteLine(dbg.Variables.Find(v => v.Name == cur.Items[1]).Value);
-                        dbg.Trace.Push(cur);
-                        break;
-
-                    case "set":
-                        if (dbg.Variables.Find(v => v.Name == cur.Items[1]) == null)
-                        {
-                            dbg.Variables.Add(new CustomVariable(dbg.Variables.Count, cur.Items[1], cur.Items[2]));
-                        }
-                        else
-                        {
-                            dbg.Variables.Find(v => v.Name == cur.Items[1]).Value = cur.Items[2];
-                        }
-                        dbg.Trace.Push(cur);
-                        break;
-
-                    case "call":
-                        if (isStepOver)
-                        {
+                    var cur = Strings.Find(s => s.Id == id);
+                    switch (cur.Items[0])
+                    {
+                        case "print":
+                            Console.WriteLine(dbg.Variables.Find(v => v.Name == cur.Items[1]).Value);
                             dbg.Trace.Push(cur);
-                            var func = dbg.Functions.Find(f => f.Name == cur.Items[1]);
-                            for (int i = 1; i < func.Strings.Count; ++i)
-                            {
-                                func.Execute(func.Strings[i].Id, true, dbg);
-                            }
-                            while (dbg.Trace.Peek().Function.Name == func.Name)
-                            {
-                                dbg.Trace.Pop();
-                            }
-                        }
-                        else
-                        {
-                            dbg.Trace.Push(cur);
-                            var func = dbg.Functions.Find(f => f.Name == cur.Items[1]);
-                            func.Execute(func.Strings.First().Id + 1, false, dbg);
-                        }
-                        break;
+                            break;
 
-                    default:
-                        Console.WriteLine("exception");
-                        break;
+                        case "set":
+                            if (dbg.Variables.Find(v => v.Name == cur.Items[1]) == null)
+                            {
+                                dbg.Variables.Add(new CustomVariable(dbg.Variables.Count, cur.Items[1], cur.Items[2]));
+                            }
+                            else
+                            {
+                                dbg.Variables.Find(v => v.Name == cur.Items[1]).Value = cur.Items[2];
+                            }
+                            dbg.Trace.Push(cur);
+                            break;
+
+                        case "call":
+                            if (dbg.Trace.Any(f => f.Function.Name == cur.Function.Name))
+                            {
+                                throw new StackOverflowException();
+                            }
+                            if (isStepOver)
+                            {
+                                dbg.Trace.Push(cur);
+                                var func = dbg.Functions.Find(f => f.Name == cur.Items[1]);
+                                for (int i = 1; i < func.Strings.Count; ++i)
+                                {
+                                    func.Execute(func.Strings[i].Id, true, dbg);
+                                }
+                                while (dbg.Trace.Peek().Function.Name == func.Name)
+                                {
+                                    dbg.Trace.Pop();
+                                }
+                            }
+                            else
+                            {
+                                dbg.Trace.Push(cur);
+                                var func = dbg.Functions.Find(f => f.Name == cur.Items[1]);
+                                func.Execute(func.Strings.First().Id + 1, false, dbg);
+                            }
+                            break;
+
+                        default:
+                            throw new InvalidOperationException(cur.Items[0]);
+                            break;
+                    }
+                }
+                catch (StackOverflowException)
+                {
+                    Console.WriteLine("Oops! Seems, its stack overflow...");
+                    throw new Exception();
+                }
+                catch (InvalidOperationException msg)
+                {
+                    Console.WriteLine("Invalid operator: " + msg);
+                    throw new Exception();
+                }
+                catch (Exception msg)
+                {
+                    Console.WriteLine(msg);
+                    throw new Exception();
                 }
             }
         }
@@ -214,6 +236,7 @@ namespace dbg
 
         public void DisplayStackTrace()
         {
+            Console.WriteLine();
             foreach (var step in Trace)
             {
                 Console.WriteLine(step);
@@ -222,6 +245,7 @@ namespace dbg
 
         public void DisplayVariables()
         {
+            Console.WriteLine();
             foreach (var variable in Variables)
             {
                 Console.WriteLine(variable);

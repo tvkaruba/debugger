@@ -25,48 +25,57 @@ namespace dbg
             bool isExit = false;
             while (!isExit)
             {
-                Console.WriteLine();
-                switch (Console.ReadKey().KeyChar)
+                try
                 {
-                    case 'h':
-                        DisplayCommands();
-                        break;
+                    Console.WriteLine();
+                    switch (Console.ReadKey().KeyChar)
+                    {
+                        case 'h':
+                            DisplayCommands();
+                            break;
 
-                    case 'i':
-                        if (!dbg.StepInto())
-                        {
-                            Console.WriteLine("End of program.");
+                        case 'i':
+                            if (!dbg.StepInto())
+                            {
+                                Console.WriteLine("\nEnd of program.");
+                                isExit = true;
+                            }
+
+                            break;
+
+                        case 'o':
+                            if (!dbg.StepOver())
+                            {
+                                Console.WriteLine("\nEnd of program.");
+                                isExit = true;
+                            }
+
+                            break;
+
+                        case 't':
+                            dbg.DisplayStackTrace();
+                            break;
+
+                        case 'v':
+                            dbg.DisplayVariables();
+                            break;
+
+                        case 'e':
                             isExit = true;
-                        }
-                        break;
+                            break;
 
-                    case 'o':
-                        if (!dbg.StepOver())
-                        {
-                            Console.WriteLine("End of program.");
-                            isExit = true;
-                        }
-                        break;
-
-                    case 't':
-                        dbg.DisplayStackTrace();
-                        break;
-
-                    case 'v':
-                        dbg.DisplayVariables();
-                        break;
-
-                    case 'e':
-                        isExit = true;
-                        break;
-
-                    default:
-                        Console.Write("Incorrect command. Try again.");
-                        break;
+                        default:
+                            Console.WriteLine("\nIncorrect command. Try again.");
+                            break;
+                    }
+                }
+                catch (Exception)
+                {
+                    isExit = true;
                 }
             }
 
-            Console.WriteLine("Press any key for exit.");
+            Console.WriteLine("\nPress any key for exit.");
             Console.ReadKey();
         }
 
