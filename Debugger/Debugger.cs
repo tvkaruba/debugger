@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace dbg
+namespace Debugger
 {
     public class Debugger
     {
@@ -29,6 +29,23 @@ namespace dbg
             }
         }
 
+        public class CustomVariable
+        {
+            public string Name { get; }
+            public string Value { get; set; }
+
+            public CustomVariable(string name, string value)
+            {
+                Name = name;
+                Value = value;
+            }
+
+            public override string ToString()
+            {
+                return $"{Name}: {Value}";
+            }
+        }
+
         public class CustomFunction
         {
             public int Id { get; }
@@ -50,19 +67,28 @@ namespace dbg
                     switch (cur.Items[0])
                     {
                         case "print":
-                            Console.Write("\n" + dbg.Variables.Find(v => v.Name == cur.Items[1]).Value);
+                            if (dbg.Variables.Find(v => v.Name == cur.Items[1]) == null)
+                            {
+                                throw new ArgumentNullException(cur.Items[1]);
+                            }
+                            else
+                            {
+                                Console.Write("\n" + dbg.Variables.Find(v => v.Name == cur.Items[1]).Value);
+                            }
+
                             dbg.Trace.Push(cur);
                             break;
 
                         case "set":
                             if (dbg.Variables.Find(v => v.Name == cur.Items[1]) == null)
                             {
-                                dbg.Variables.Add(new CustomVariable(dbg.Variables.Count, cur.Items[1], cur.Items[2]));
+                                dbg.Variables.Add(new CustomVariable(cur.Items[1], cur.Items[2]));
                             }
                             else
                             {
                                 dbg.Variables.Find(v => v.Name == cur.Items[1]).Value = cur.Items[2];
                             }
+
                             dbg.Trace.Push(cur);
                             break;
 
@@ -71,6 +97,7 @@ namespace dbg
                             {
                                 throw new StackOverflowException();
                             }
+
                             if (isStepOver)
                             {
                                 dbg.Trace.Push(cur);
@@ -79,6 +106,7 @@ namespace dbg
                                 {
                                     func.Execute(func.Strings[i].Id, true, dbg);
                                 }
+
                                 while (dbg.Trace.Peek().Function.Name == func.Name)
                                 {
                                     dbg.Trace.Pop();
@@ -90,6 +118,7 @@ namespace dbg
                                 var func = dbg.Functions.Find(f => f.Name == cur.Items[1]);
                                 func.Execute(func.Strings.First().Id + 1, false, dbg);
                             }
+
                             break;
 
                         default:
@@ -102,9 +131,14 @@ namespace dbg
                     Console.WriteLine("\nOops! Seems, its stack overflow...");
                     throw new Exception();
                 }
-                catch (InvalidOperationException msg)
+                catch (InvalidOperationException ex)
                 {
-                    Console.WriteLine("\n" + msg);
+                    Console.WriteLine("\nInvalid operator: " + ex.Message);
+                    throw new Exception();
+                }
+                catch (ArgumentNullException ex)
+                {
+                    Console.WriteLine("\nUndefined variable: " + ex.Message);
                     throw new Exception();
                 }
                 catch (Exception msg)
@@ -112,26 +146,6 @@ namespace dbg
                     Console.WriteLine("\n" + msg);
                     throw new Exception();
                 }
-            }
-        }
-
-        public class CustomVariable
-        {
-            public int Id { get; }
-
-            public string Name { get; }
-            public string Value { get; set; }
-
-            public CustomVariable(int id, string name, string value)
-            {
-                Id = id;
-                Name = name;
-                Value = value;
-            }
-
-            public override string ToString()
-            {
-                return $"{Name}: {Value}";
             }
         }
 
@@ -149,13 +163,11 @@ namespace dbg
                 if (items[0] == "sub")
                 {
                     Functions.Add(new CustomFunction(Functions.Count, items[1]));
-                    Functions.Last().Strings.Add(
-                        new CustomString(Functions.Last().Strings.Count, str, Functions.Last()));
+                    Functions.Last().Strings.Add(new CustomString(Functions.Last().Strings.Count, str, Functions.Last()));
                 }
                 else
                 {
-                    Functions.Last().Strings.Add(
-                        new CustomString(Functions.Last().Strings.Count, str, Functions.Last()));
+                    Functions.Last().Strings.Add(new CustomString(Functions.Last().Strings.Count, str, Functions.Last()));
                 }
             }
         }
@@ -234,20 +246,26 @@ namespace dbg
             return true;
         }
 
-        public void DisplayStackTrace()
+        public string GetStackTrace()
         {
+            string trace = "";
             foreach (var step in Trace)
             {
-                Console.Write("\n" + step);
+                trace += ("\n" + step);
             }
+
+            return trace;
         }
 
-        public void DisplayVariables()
+        public string GetVariablesList()
         {
+            string list = "";
             foreach (var variable in Variables)
             {
-                Console.Write("\n" + variable);
+                list += ("\n" + variable);
             }
+
+            return list;
         }
     }
 }

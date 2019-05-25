@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace dbg
+namespace Debugger
 {
     class Program
     {
@@ -53,11 +53,13 @@ namespace dbg
                             break;
 
                         case 't':
-                            dbg.DisplayStackTrace();
+                            var trace = dbg.GetStackTrace();
+                            Console.Write(trace);
                             break;
 
                         case 'v':
-                            dbg.DisplayVariables();
+                            var list = dbg.GetVariablesList();
+                            Console.Write(list);
                             break;
 
                         case 'e':
@@ -71,6 +73,8 @@ namespace dbg
                 }
                 catch (Exception)
                 {
+                    var trace = dbg.GetStackTrace();
+                    Console.Write("\n" + trace);
                     isExit = true;
                 }
             }
