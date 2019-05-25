@@ -6,22 +6,51 @@ namespace Debugger
 {
     class Program
     {
+        // Ну тут все простенько конечно, но оставлю пару комментов.
         static void Main(string[] args)
         {
             Debugger dbg;
 
-            using (FileStream fs = File.OpenRead(@"..\..\input.txt"))
+            // Считывание текста программы из input.txt
+            try
             {
-                byte[] arr = new byte[fs.Length];
-                fs.Read(arr, 0, arr.Length);
-                var text = Encoding.Default.GetString(arr);
-                dbg = new Debugger(text);
+                using (FileStream fs = File.OpenRead(@"..\..\input.txt"))
+                {
+                    byte[] arr = new byte[fs.Length];
+                    fs.Read(arr, 0, arr.Length);
+                    var text = Encoding.Default.GetString(arr);
+                    dbg = new Debugger(text);
 
-                Console.WriteLine(text);
+                    Console.WriteLine(text);
+                }
             }
-            
+            catch (InvalidDataException ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine("Press any key for exit.");
+                Console.ReadKey();
+                return;
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine("Press any key for exit.");
+                Console.ReadKey();
+                return;
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Something was wrong. );");
+                Console.WriteLine("Press any key for exit.");
+                Console.ReadKey();
+                return;
+            }
+
             DisplayCommands();
 
+            // Описания комманд можно почитать в методе DisplayCommands чуть ниже main.
+            // В случае возникновения ошибки, печатается стектрайс и программа завершается
+            // (сообщение характерное для ошибки печатается на более низком уровне).
             bool isExit = false;
             while (!isExit)
             {
@@ -37,7 +66,7 @@ namespace Debugger
                         case 'i':
                             if (!dbg.StepInto())
                             {
-                                Console.WriteLine("\nEnd of program.");
+                                Console.Write("\nEnd of program.");
                                 isExit = true;
                             }
 
@@ -46,7 +75,7 @@ namespace Debugger
                         case 'o':
                             if (!dbg.StepOver())
                             {
-                                Console.WriteLine("\nEnd of program.");
+                                Console.Write("\nEnd of program.");
                                 isExit = true;
                             }
 
@@ -67,7 +96,7 @@ namespace Debugger
                             break;
 
                         default:
-                            Console.WriteLine("\nIncorrect command. Try again.");
+                            Console.Write("\nIncorrect command. Try again.");
                             break;
                     }
                 }
@@ -83,6 +112,9 @@ namespace Debugger
             Console.ReadKey();
         }
 
+        /// <summary>
+        /// Выводит на экран список команд для ввода.
+        /// </summary>
         private static void DisplayCommands()
         {
             Console.WriteLine("\n'h' - display list of commands\n" +
