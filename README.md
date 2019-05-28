@@ -1,1 +1,1 @@
-# jb.debugger
+# small debugger
